@@ -1,0 +1,53 @@
+(require 'essh)
+(defun li/essh-stop ()
+  "Kill the currently running *shell* buffer"
+  (interactive)
+  (setq sprocess (process-shell-choose))
+  (setq sbuffer (process-buffer sprocess))
+  (if (y-or-n-p "Really quit shell? ")
+      (progn
+        (delete-process sprocess)
+        (kill-buffer    sbuffer))))
+
+(defun li/essh-display-buffer ()
+  "Display the *shell* buffer so the recent output is visible."
+  (interactive)
+  (let ((origbuffer (current-buffer)))
+    (setq sprocess (process-shell-choose))
+    (setq sbuffer (process-buffer sprocess))
+    (pop-to-buffer sbuffer)
+    (goto-char (point-max))
+    (pop-to-buffer origbuffer)))
+
+(defun li/essh-show-shell ()
+  (interactive)
+  (setq sprocess (process-shell-choose))
+  (setq sbuffer (process-buffer sprocess))
+  (pop-to-buffer sbuffer)
+  (goto-char (point-max)))
+
+(defun li/pipe-line-to-shell-and-step-and-display ()
+  (interactive)
+  (pipe-line-to-shell-and-step)
+  (li/essh-display-buffer))
+
+(defun li/pipe-buffer-to-shell-and-display ()
+  (interactive)
+  (pipe-buffer-to-shell)
+  (li/essh-display-buffer))
+
+(defun li/pipe-region-to-shell-and-display (start end)
+  (interactive "r")
+  (pipe-region-to-shell start end)
+  (li/essh-display-buffer))
+
+(defun essh-sh-hook ()
+  (define-key sh-mode-map "\C-c\C-r" 'li/pipe-region-to-shell-and-display)
+  (define-key sh-mode-map "\C-c\C-b" 'li/pipe-buffer-to-shell-and-display)
+  (define-key sh-mode-map "\C-c\C-n" 'pipe-line-to-shell)
+  (define-key sh-mode-map "\C-c\C-n" 'li/essh-show-shell)
+  (define-key sh-mode-map "\C-c\C-c" 'li/pipe-line-to-shell-and-step-and-display)
+  (define-key sh-mode-map "\C-c\C-f" 'pipe-function-to-shell)
+  (define-key sh-mode-map "\C-c\C-k" 'li/essh-stop)
+  (define-key sh-mode-map "\C-c\C-d" 'shell-cd-current-directory))
+(add-hook 'sh-mode-hook 'essh-sh-hook)
