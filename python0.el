@@ -22,7 +22,7 @@
   "Send the buffer to the Python process."
   (interactive "P")
   (run-python)
-  (python-shell-send-region (point-min) (point-max)))
+  (li/python-send-region (point-min) (point-max)))
 
 (defun li/python-dispay-buffer ()
   "Display the inferior-python-process buffer so the recent output is visible"
@@ -41,9 +41,13 @@
      (run-python))
    (let ((b (li/python-line-beginning-position))
          (e (li/python-line-end-position)))
-     (python-shell-send-region b e))
-   (li/python-dispay-buffer)
+     (li/python-send-region b e))
    (next-line))
+
+(defun li/python-send-region (beg end)
+  (interactive "r\nP")
+  (python-shell-send-region beg end)
+  (li/python-dispay-buffer))
 
 (defun li/python-set-magic ()
   "Adds shebang and make script executable"
@@ -74,9 +78,14 @@
 
 (defun li/python-keys ()
   "Sets keys in python-mode"
-  (let ((MAP python-mode-map)) (li/python-keys0)))
+  (let ((MAP python-mode-map))
+    (li/python-keys0)))
+
+(defun li/python-variables ()
+  (setq python-shell-interpreter "python3"))
 
 (add-hook 'python-mode-hook 'li/python-keys)
+(add-hook 'python-mode-hook 'li/python-variables)
           
 (defun ps (&optional arg)
   (interactive "P")
