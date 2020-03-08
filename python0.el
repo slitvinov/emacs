@@ -1,30 +1,34 @@
 (defun li/python-keys0 ()
   (li/define-key "C-c   :" 'li/python-set-magic)
   (li/define-key "C-c C-k" 'li/python-stop)
+  (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-b" 'li/python-send-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
+(defun li/run-python ()
+  (get-buffer-process
+   (python-shell-make-comint
+    (python-shell-calculate-command)
+    (python-shell-get-process-name nil) nil)))
+
 (defun li/python-send-buffer ()
-  "Send the buffer to the Python process."
   (interactive)
-  (run-python)
+  (li/run-python)
   (li/python-send-region (point-min) (point-max)))
 
 (defun li/python-dispay-buffer ()
-  "Display the inferior-python-process buffer so the recent output is visible"
   (interactive)
   (let ((org (current-buffer)))
     (unless (processp (python-shell-get-process))
-      (run-python))
+      (li/run-python))
     (pop-to-buffer (process-buffer (python-shell-get-process)))
     (goto-char (point-max))
     (pop-to-buffer org)))
 
 (defun li/python-send-line ()
-   "Send the line to the inferior Python process."
    (interactive)
    (unless (processp (python-shell-get-process))
-     (run-python))
+     (li/run-python))
    (let ((b (line-beginning-position))
          (e (line-end-position)))
      (li/python-send-region b e))
@@ -36,12 +40,10 @@
   (li/python-dispay-buffer))
 
 (defun li/python-set-magic ()
-  "Adds shebang and make script executable"
   (interactive)
-  (executable-set-magic "python"))
+  (executable-set-magic python-shell-interpreter))
 
 (defun li/python-stop ()
-  "Kill the currently running python process"
   (interactive)
   (let ((proc (python-shell-get-process)))
     (when proc
@@ -49,7 +51,6 @@
       (delete-process proc))))
 
 (defun li/python-keys ()
-  "Sets keys in python-mode"
   (let ((MAP python-mode-map))
     (li/python-keys0)))
 
