@@ -5,11 +5,27 @@
   (li/define-key "C-c C-b" 'li/python-send-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
+(defun li/python-shell-get-buffer ()
+  (if (derived-mode-p 'inferior-python-mode)
+      (current-buffer)
+    (let* ((name  (python-shell-get-process-name nil))
+           (buffer-name (format "*%s*" name))
+           (running (comint-check-proc buffer-name)))
+      (and running buffer-name))))
+
+(defun li/python-shell-get-process ()
+  (get-buffer-process (li/python-shell-get-buffer)))
+
+(defun li/python-shell-calculate-command ()
+  (format "%s %s"
+	  (combine-and-quote-strings (list python-shell-interpreter))
+	  python-shell-interpreter-args))
+
 (defun li/run-python ()
   (get-buffer-process
    (python-shell-make-comint
-    (python-shell-calculate-command)
-    (python-shell-get-process-name nil) nil)))
+    (li/python-shell-calculate-command)
+    python-shell-buffer-name nil)))
 
 (defun li/python-send-buffer ()
   (interactive)
@@ -19,15 +35,15 @@
 (defun li/python-dispay-buffer ()
   (interactive)
   (let ((org (current-buffer)))
-    (unless (processp (python-shell-get-process))
+    (unless (processp (li/python-shell-get-process))
       (li/run-python))
-    (pop-to-buffer (process-buffer (python-shell-get-process)))
+    (pop-to-buffer (process-buffer (li/python-shell-get-process)))
     (goto-char (point-max))
     (pop-to-buffer org)))
 
 (defun li/python-send-line ()
    (interactive)
-   (unless (processp (python-shell-get-process))
+   (unless (processp (li/python-shell-get-process))
      (li/run-python))
    (let ((b (line-beginning-position))
          (e (line-end-position)))
@@ -45,9 +61,9 @@
 
 (defun li/python-stop ()
   (interactive)
-  (let ((proc (python-shell-get-process)))
+  (let ((proc (li/python-shell-get-process)))
     (when proc
-      (kill-buffer (python-shell-get-buffer))
+      (kill-buffer (li/python-shell-get-buffer))
       (delete-process proc))))
 
 (defun li/python-keys ()
