@@ -1,17 +1,48 @@
 (defun li/python-keys0 ()
-  (li/define-key "C-c   :" 'li/python-set-magic)
-  (li/define-key "C-c C-k" 'li/python-stop)
-  (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-b" 'li/python-send-buffer)
+  (li/define-key "C-c C-c" 'li/python-send-line)
   (li/define-key "C-c C-e" 'li/python-to-here)
+  (li/define-key "C-c C-k" 'li/python-stop)
+  (li/define-key "C-c C-l" 'li/python-shell-send-file)
+  (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-z" 'li/python-dispay-buffer)
-  (li/define-key "C-c C-c" 'li/python-send-line))
+  (li/define-key "C-c   :" 'li/python-set-magic))
+
+(defun li/python-shell-send-file (file-name &optional process temp-file-name
+                                         delete)
+  (interactive
+   (list
+    (read-file-name "File to send: ")   ; file-name
+    nil                                 ; process
+    nil                                 ; temp-file-name
+    nil))                               ; delete
+  (let* ((process (or process (li/python-shell-get-process)))
+         (encoding (with-temp-buffer
+                     (insert-file-contents
+                      (or temp-file-name file-name))
+                     (python-info-encoding)))
+         (file-name (expand-file-name (file-local-name file-name)))
+         (temp-file-name (when temp-file-name
+                           (expand-file-name
+                            (file-local-name temp-file-name)))))
+    (li/python-shell-send-string
+     (format
+      (concat
+       "import codecs, os;"
+       "__pyfile = codecs.open('''%s''', encoding='''%s''');"
+       "__code = __pyfile.read().encode('''%s''');"
+       "__pyfile.close();"
+       (when (and delete temp-file-name)
+         (format "os.remove('''%s''');" temp-file-name))
+       "exec(compile(__code, '''%s''', 'exec'));")
+      (or temp-file-name file-name) encoding encoding file-name)
+     process)))
 
 (defun li/python-shell-send-string (string process)
   (if (string-match ".\n+." string)
       (let* ((temp-file-name (python-shell--save-temp-file string))
 	     (file-name (or (buffer-file-name) temp-file-name)))
-	(python-shell-send-file file-name process temp-file-name t))
+	(li/python-shell-send-file file-name process temp-file-name t))
     (comint-send-string process string)
     (when (or (not (string-match "\n\\'" string))
 	      (string-match "\n[ \t].*\n?\\'" string))
@@ -63,6 +94,7 @@
 	  python-shell-interpreter-args))
 
 (defun li/run-python ()
+  (interactive)
   (li/python-shell-make-comint (li/python-shell-calculate-command)
 			       python-shell-buffer-name))
 
