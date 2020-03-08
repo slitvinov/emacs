@@ -8,13 +8,13 @@
 (defun li/python-shell-make-comint (cmd proc-name)
   (save-excursion
     (python-shell-with-environment
-      (let* ((proc-buffer-name
+      (let* ((buffer-name
               (format "*%s*" proc-name)))
-        (when (not (comint-check-proc proc-buffer-name))
+        (when (not (comint-check-proc buffer-name))
           (let* ((cmdlist (split-string-and-unquote cmd))
                  (interpreter (car cmdlist))
                  (args (cdr cmdlist))
-                 (buffer (apply #'make-comint-in-buffer proc-name proc-buffer-name
+                 (buffer (apply #'make-comint-in-buffer proc-name buffer-name
                                 interpreter nil args))
                  (python-shell--parent-buffer (current-buffer))
                  (process (get-buffer-process buffer))
@@ -24,7 +24,7 @@
             (with-current-buffer buffer
               (inferior-python-mode))
             (and nil (set-process-query-on-exit-flag process nil))))
-        proc-buffer-name))))
+        buffer-name))))
 
 (defun li/python-send-region (start end)
   (interactive "r\n")
