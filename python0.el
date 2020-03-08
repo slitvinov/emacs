@@ -5,10 +5,17 @@
   (li/define-key "C-c C-b" 'li/python-send-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
+(defun li/python-send-region (start end)
+  (interactive "r\n")
+  (let* ((string (python-shell-buffer-substring start end t))
+         (process (python-shell-get-process-or-error t)))
+    (python-shell-send-string string process))
+  (li/python-dispay-buffer))
+
 (defun li/python-shell-get-buffer ()
   (if (derived-mode-p 'inferior-python-mode)
       (current-buffer)
-    (let* ((name  (python-shell-get-process-name nil))
+    (let* ((name  python-shell-buffer-name)
            (buffer-name (format "*%s*" name))
            (running (comint-check-proc buffer-name)))
       (and running buffer-name))))
@@ -49,11 +56,6 @@
          (e (line-end-position)))
      (li/python-send-region b e))
    (next-line))
-
-(defun li/python-send-region (beg end)
-  (interactive "r\n")
-  (python-shell-send-region beg end)
-  (li/python-dispay-buffer))
 
 (defun li/python-set-magic ()
   (interactive)
