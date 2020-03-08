@@ -4,23 +4,9 @@
   (li/define-key "C-c C-b" 'li/python-send-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
-(defun li/python-line-beginning-position ()
-  (if (not (fboundp 'line-beginning-position))
-      (save-excursion
-	(beginning-of-line)
-	(point))
-    (line-beginning-position)))
-
-(defun li/python-line-end-position ()
-  (if (not (fboundp 'line-end-position))
-      (save-excursion
-	(end-of-line)
-	(point))
-    (line-end-position)))
-
 (defun li/python-send-buffer ()
   "Send the buffer to the Python process."
-  (interactive "P")
+  (interactive)
   (run-python)
   (li/python-send-region (point-min) (point-max)))
 
@@ -39,13 +25,13 @@
    (interactive)
    (unless (processp (python-shell-get-process))
      (run-python))
-   (let ((b (li/python-line-beginning-position))
-         (e (li/python-line-end-position)))
+   (let ((b (line-beginning-position))
+         (e (line-end-position)))
      (li/python-send-region b e))
    (next-line))
 
 (defun li/python-send-region (beg end)
-  (interactive "r\nP")
+  (interactive "r\n")
   (python-shell-send-region beg end)
   (li/python-dispay-buffer))
 
@@ -54,23 +40,9 @@
   (interactive)
   (executable-set-magic "python"))
 
-(defun li/line-beginning-position ()
-  (if (not (fboundp 'line-beginning-position))
-      (save-excursion
-	(beginning-of-line)
-	(point))
-    (line-beginning-position)))
-
-(defun li/line-end-position ()
-  (if (not (fboundp 'line-end-position))
-      (save-excursion
-	(end-of-line)
-	(point))
-    (line-end-position)))
-
 (defun li/python-stop ()
   "Kill the currently running python process"
-  (interactive "P")
+  (interactive)
   (let ((proc (python-shell-get-process)))
     (when proc
       (kill-buffer (python-shell-get-buffer))
@@ -87,21 +59,6 @@
 (add-hook 'python-mode-hook 'li/python-keys)
 (add-hook 'python-mode-hook 'li/python-variables)
           
-(defun ps (&optional arg)
-  (interactive "P")
-  (ps0)
-  (li/python-set-magic)
-  (python-mode))
-
-(define-skeleton ps0
-  "Insert python codeforces skeleton"
-  ""
-  "from collections import deque\n"
-  "\n"
-  "def ir(): return int(raw_input())\n"
-  "def ia(): return map(int, raw_input().split())\n"
-  "\n")
-
 (with-eval-after-load 'python
   (defun python-shell-completion-native-try ()
     "Return non-nil if can trigger native completion."
