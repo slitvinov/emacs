@@ -5,7 +5,7 @@
   (li/define-key "C-c C-k" 'li/python-stop)
   (li/define-key "C-c C-l" 'li/python-shell-send-file)
   (li/define-key "C-c C-r" 'li/python-send-region)
-  (li/define-key "C-c C-z" 'li/python-dispay-buffer)
+  (li/define-key "C-c C-z" 'li/python-display-buffer)
   (li/define-key "C-c   :" 'li/python-set-magic))
 
 (defun li/python-shell-send-file (file-name &optional process temp-file-name
@@ -58,8 +58,8 @@
           (let* ((cmdlist (split-string-and-unquote cmd))
                  (interpreter (car cmdlist))
                  (args (cdr cmdlist))
-                 (buffer (apply #'make-comint-in-buffer proc-name buffer-name
-                                interpreter nil args))
+                 (buffer (apply #'li/make-comint-in-buffer proc-name buffer-name
+                                interpreter args))
                  (python-shell--parent-buffer (current-buffer))
                  (process (get-buffer-process buffer))
                  (python-shell--interpreter interpreter)
@@ -76,7 +76,7 @@
   (let* ((string (python-shell-buffer-substring start end t))
          (process (li/python-shell-get-process)))
     (li/python-shell-send-string string process))
-  (li/python-dispay-buffer))
+  (li/python-display-buffer))
 
 (defun li/python-shell-get-buffer ()
   (if (derived-mode-p 'inferior-python-mode)
@@ -94,9 +94,12 @@
 	  (combine-and-quote-strings (list python-shell-interpreter))
 	  python-shell-interpreter-args))
 
-(defun li/run-python ()
-  (interactive)
-  (li/python-shell-make-comint (li/python-shell-calculate-command)
+(defun li/run-python (&optional cmd)
+  (interactive
+   (if current-prefix-arg
+       (list
+        (read-shell-command "Run: " (python-shell-calculate-command)))))
+  (li/python-shell-make-comint (or cmd (li/python-shell-calculate-command))
 			       (li/python-shell-get-process-name)))
 
 (defun li/python-shell-get-process-name ()
@@ -109,9 +112,10 @@
 
 (defun li/python-send-buffer ()
   (interactive)
+  ('li/run-python)
   (li/python-send-region (point-min) (point-max)))
 
-(defun li/python-dispay-buffer ()
+(defun li/python-display-buffer ()
   (interactive)
   (let ((org (current-buffer)))
     (unless (processp (li/python-shell-get-process))
@@ -146,6 +150,7 @@
 
 (defun li/python-variables ()
   (setq python-indent-guess-indent-offset nil)
+  (setq python-shell-interpreter-args "-q -i")
   (setq python-shell-interpreter "python3"))
 
 (add-hook 'python-mode-hook 'li/python-keys)
