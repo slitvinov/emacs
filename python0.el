@@ -5,10 +5,31 @@
   (li/define-key "C-c C-b" 'li/python-send-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
+(defun li/python-shell-make-comint (cmd proc-name)
+  (save-excursion
+    (python-shell-with-environment
+      (let* ((proc-buffer-name
+              (format "*%s*" proc-name)))
+        (when (not (comint-check-proc proc-buffer-name))
+          (let* ((cmdlist (split-string-and-unquote cmd))
+                 (interpreter (car cmdlist))
+                 (args (cdr cmdlist))
+                 (buffer (apply #'make-comint-in-buffer proc-name proc-buffer-name
+                                interpreter nil args))
+                 (python-shell--parent-buffer (current-buffer))
+                 (process (get-buffer-process buffer))
+                 (python-shell--interpreter interpreter)
+                 (python-shell--interpreter-args
+                  (mapconcat #'identity args " ")))
+            (with-current-buffer buffer
+              (inferior-python-mode))
+            (and nil (set-process-query-on-exit-flag process nil))))
+        proc-buffer-name))))
+
 (defun li/python-send-region (start end)
   (interactive "r\n")
   (let* ((string (python-shell-buffer-substring start end t))
-         (process (python-shell-get-process-or-error t)))
+         (process (li/python-shell-get-process)))
     (python-shell-send-string string process))
   (li/python-dispay-buffer))
 
@@ -30,9 +51,8 @@
 
 (defun li/run-python ()
   (get-buffer-process
-   (python-shell-make-comint
-    (li/python-shell-calculate-command)
-    python-shell-buffer-name nil)))
+   (li/python-shell-make-comint (li/python-shell-calculate-command)
+				python-shell-buffer-name)))
 
 (defun li/python-send-buffer ()
   (interactive)
