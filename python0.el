@@ -3,7 +3,18 @@
   (li/define-key "C-c C-k" 'li/python-stop)
   (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-b" 'li/python-send-buffer)
+  (li/define-key "C-c C-z" 'li/python-dispay-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
+
+(defun li/python-shell-send-string (string process)
+  (if (string-match ".\n+." string)
+      (let* ((temp-file-name (python-shell--save-temp-file string))
+	     (file-name (or (buffer-file-name) temp-file-name)))
+	(li/python-shell-send-file file-name process temp-file-name t))
+    (comint-send-string process string)
+    (when (or (not (string-match "\n\\'" string))
+	      (string-match "\n[ \t].*\n?\\'" string))
+      (comint-send-string process "\n"))))
 
 (defun li/python-shell-make-comint (cmd proc-name)
   (save-excursion
@@ -30,7 +41,7 @@
   (interactive "r\n")
   (let* ((string (python-shell-buffer-substring start end t))
          (process (li/python-shell-get-process)))
-    (python-shell-send-string string process))
+    (li/python-shell-send-string string process))
   (li/python-dispay-buffer))
 
 (defun li/python-shell-get-buffer ()
