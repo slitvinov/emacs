@@ -145,6 +145,7 @@
     (li/python-keys0)))
 
 (defun li/python-variables ()
+  (setq python-indent-guess-indent-offset nil)
   (setq python-shell-interpreter "python3"))
 
 (add-hook 'python-mode-hook 'li/python-keys)
