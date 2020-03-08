@@ -18,7 +18,7 @@
 	(point))
     (line-end-position)))
 
-(defun li/python-send-buffer (&optional arg)
+(defun li/python-send-buffer ()
   "Send the buffer to the Python process."
   (interactive "P")
   (run-python)
@@ -68,13 +68,13 @@
 	(point))
     (line-end-position)))
 
-(defun li/python-stop (&optional arg)
+(defun li/python-stop ()
   "Kill the currently running python process"
   (interactive "P")
-  (if (processp (python-shell-get-process))
-      (progn 
-        (delete-process (python-shell-get-process))
-        (kill-buffer "*Python*"))))
+  (let ((proc (python-shell-get-process)))
+    (when proc
+      (kill-buffer (python-shell-get-buffer))
+      (delete-process proc))))
 
 (defun li/python-keys ()
   "Sets keys in python-mode"

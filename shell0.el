@@ -4,10 +4,8 @@
   (interactive)
   (setq sprocess (process-shell-choose))
   (setq sbuffer (process-buffer sprocess))
-  (if (y-or-n-p "Really quit shell? ")
-      (progn
-        (delete-process sprocess)
-        (kill-buffer    sbuffer))))
+  (delete-process sprocess)
+  (kill-buffer    sbuffer))
 
 (defun li/essh-display-buffer ()
   "Display the *shell* buffer so the recent output is visible."
