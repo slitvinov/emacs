@@ -3,6 +3,7 @@
   (li/define-key "C-c C-k" 'li/python-stop)
   (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-b" 'li/python-send-buffer)
+  (li/define-key "C-c C-e" 'li/python-to-here)
   (li/define-key "C-c C-z" 'li/python-dispay-buffer)
   (li/define-key "C-c C-c" 'li/python-send-line))
 
@@ -10,7 +11,7 @@
   (if (string-match ".\n+." string)
       (let* ((temp-file-name (python-shell--save-temp-file string))
 	     (file-name (or (buffer-file-name) temp-file-name)))
-	(li/python-shell-send-file file-name process temp-file-name t))
+	(python-shell-send-file file-name process temp-file-name t))
     (comint-send-string process string)
     (when (or (not (string-match "\n\\'" string))
 	      (string-match "\n[ \t].*\n?\\'" string))
@@ -39,6 +40,7 @@
 
 (defun li/python-send-region (start end)
   (interactive "r\n")
+  (li/run-python)
   (let* ((string (python-shell-buffer-substring start end t))
          (process (li/python-shell-get-process)))
     (li/python-shell-send-string string process))
@@ -61,13 +63,15 @@
 	  python-shell-interpreter-args))
 
 (defun li/run-python ()
-  (get-buffer-process
-   (li/python-shell-make-comint (li/python-shell-calculate-command)
-				python-shell-buffer-name)))
+  (li/python-shell-make-comint (li/python-shell-calculate-command)
+			       python-shell-buffer-name))
+
+(defun li/python-to-here ()
+  (interactive)
+  (li/python-send-region (point-min) (point)))
 
 (defun li/python-send-buffer ()
   (interactive)
-  (li/run-python)
   (li/python-send-region (point-min) (point-max)))
 
 (defun li/python-dispay-buffer ()
