@@ -9,34 +9,35 @@
   (li/define-key "C-c   :" 'li/python-set-magic))
 
 (defun li/python-shell-send-file (file-name &optional process temp-file-name
-                                         delete)
+					    delete)
   (interactive
    (list
-    (read-file-name "File to send: ")   ; file-name
+    (read-file-name "File: ")   ; file-name
     nil                                 ; process
     nil                                 ; temp-file-name
     nil))                               ; delete
-  (let* ((process (or process (li/python-shell-get-process)))
-         (encoding (with-temp-buffer
-                     (insert-file-contents
-                      (or temp-file-name file-name))
-                     (python-info-encoding)))
-         (file-name (expand-file-name (file-local-name file-name)))
-         (temp-file-name (when temp-file-name
-                           (expand-file-name
-                            (file-local-name temp-file-name)))))
-    (li/python-shell-send-string
-     (format
-      (concat
-       "import codecs, os;"
-       "__pyfile = codecs.open('''%s''', encoding='''%s''');"
-       "__code = __pyfile.read().encode('''%s''');"
-       "__pyfile.close();"
-       (when (and delete temp-file-name)
-         (format "os.remove('''%s''');" temp-file-name))
-       "exec(compile(__code, '''%s''', 'exec'));")
-      (or temp-file-name file-name) encoding encoding file-name)
-     process)))
+  (python-shell-with-environment  
+    (let* ((process (or process (li/python-shell-get-process)))
+	   (encoding (with-temp-buffer
+		       (insert-file-contents
+			(or temp-file-name file-name))
+		       (python-info-encoding)))
+	   (file-name (expand-file-name (file-local-name file-name)))
+	   (temp-file-name (when temp-file-name
+			     (expand-file-name
+			      (file-local-name temp-file-name)))))
+      (li/python-shell-send-string
+       (format
+	(concat
+	 "import codecs, os;"
+	 "__pyfile = codecs.open('''%s''', encoding='''%s''');"
+	 "__code = __pyfile.read().encode('''%s''');"
+	 "__pyfile.close();"
+	 (when (and delete temp-file-name)
+	   (format "os.remove('''%s''');" temp-file-name))
+	 "exec(compile(__code, '''%s''', 'exec'));")
+	(or temp-file-name file-name) encoding encoding file-name)
+       process))))
 
 (defun li/python-shell-send-string (string process)
   (if (string-match ".\n+." string)
@@ -80,7 +81,7 @@
 (defun li/python-shell-get-buffer ()
   (if (derived-mode-p 'inferior-python-mode)
       (current-buffer)
-    (let* ((name  python-shell-buffer-name)
+    (let* ((name  (li/python-shell-get-process-name))
            (buffer-name (format "*%s*" name))
            (running (comint-check-proc buffer-name)))
       (and running buffer-name))))
@@ -96,7 +97,11 @@
 (defun li/run-python ()
   (interactive)
   (li/python-shell-make-comint (li/python-shell-calculate-command)
-			       python-shell-buffer-name))
+			       (li/python-shell-get-process-name)))
+
+(defun li/python-shell-get-process-name ()
+  (format "%s:%s" python-shell-buffer-name
+	  (abbreviate-file-name default-directory)))
 
 (defun li/python-to-here ()
   (interactive)
