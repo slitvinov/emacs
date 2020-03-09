@@ -6,7 +6,12 @@
   (li/define-key "C-c C-l" 'li/python-shell-send-file)
   (li/define-key "C-c C-r" 'li/python-send-region)
   (li/define-key "C-c C-z" 'li/python-display-buffer)
+  (li/define-key "C-c C-n" 'li/run-python)
   (li/define-key "C-c   :" 'li/python-set-magic))
+
+(defun li/file-local-name (file-name)
+  (or (file-remote-p file-name 'localname)
+      file-name))
 
 (defun li/python-shell-send-file (file-name &optional process temp-file-name
 					    delete)
@@ -22,10 +27,12 @@
 		       (insert-file-contents
 			(or temp-file-name file-name))
 		       (python-info-encoding)))
-	   (file-name (expand-file-name (file-local-name file-name)))
+         (file-name (expand-file-name
+                     (or (file-remote-p file-name 'localname)
+                         file-name)))
 	   (temp-file-name (when temp-file-name
 			     (expand-file-name
-			      (file-local-name temp-file-name)))))
+			      (li/file-local-name temp-file-name)))))
       (li/python-shell-send-string
        (format
 	(concat
@@ -98,7 +105,7 @@
   (interactive
    (if current-prefix-arg
        (list
-        (read-shell-command "Run: " (python-shell-calculate-command)))))
+        (read-shell-command "$ " (python-shell-calculate-command)))))
   (li/python-shell-make-comint (or cmd (li/python-shell-calculate-command))
 			       (li/python-shell-get-process-name)))
 
@@ -112,7 +119,7 @@
 
 (defun li/python-send-buffer ()
   (interactive)
-  ('li/run-python)
+  (li/run-python)
   (li/python-send-region (point-min) (point-max)))
 
 (defun li/python-display-buffer ()
