@@ -27,9 +27,9 @@
 		       (insert-file-contents
 			(or temp-file-name file-name))
 		       (python-info-encoding)))
-         (file-name (expand-file-name
-                     (or (file-remote-p file-name 'localname)
-                         file-name)))
+           (file-name (expand-file-name
+                       (or (file-remote-p file-name 'localname)
+                           file-name)))
 	   (temp-file-name (when temp-file-name
 			     (expand-file-name
 			      (li/file-local-name temp-file-name)))))
@@ -107,7 +107,8 @@
        (list
         (read-shell-command "Run: " (python-shell-calculate-command)))))
   (li/python-shell-make-comint (or cmd (li/python-shell-calculate-command))
-			       (li/python-shell-get-process-name)))
+			       (li/python-shell-get-process-name))
+  (li/python-display-buffer))
 
 (defun li/python-shell-get-process-name ()
   (format "%s:%s" python-shell-buffer-name
@@ -132,13 +133,13 @@
     (pop-to-buffer org)))
 
 (defun li/python-send-line ()
-   (interactive)
-   (unless (processp (li/python-shell-get-process))
-     (li/run-python))
-   (let ((b (line-beginning-position))
-         (e (line-end-position)))
-     (li/python-send-region b e))
-   (next-line))
+  (interactive)
+  (unless (processp (li/python-shell-get-process))
+    (li/run-python))
+  (let ((b (line-beginning-position))
+        (e (line-end-position)))
+    (li/python-send-region b e))
+  (next-line))
 
 (defun li/python-set-magic ()
   (interactive)
@@ -162,7 +163,7 @@
 
 (add-hook 'python-mode-hook 'li/python-keys)
 (add-hook 'python-mode-hook 'li/python-variables)
-          
+
 (with-eval-after-load 'python
   (defun python-shell-completion-native-try ()
     "Return non-nil if can trigger native completion."
