@@ -105,7 +105,7 @@
   (interactive
    (if current-prefix-arg
        (list
-        (read-shell-command "$ " (python-shell-calculate-command)))))
+        (read-shell-command "Run: " (python-shell-calculate-command)))))
   (li/python-shell-make-comint (or cmd (li/python-shell-calculate-command))
 			       (li/python-shell-get-process-name)))
 
